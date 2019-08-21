@@ -1,0 +1,3 @@
+/home/hdoerner/git/c-demo/build/CMakeFiles/rebuild_cache.dir
+/home/hdoerner/git/c-demo/build/CMakeFiles/c-demo.dir
+/home/hdoerner/git/c-demo/build/CMakeFiles/edit_cache.dir
