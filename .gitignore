@@ -53,6 +53,7 @@ dkms.conf
 
 # vim .swp files
 *.swp
+*.swo
 
 # cmake build directory
-cmake/
+build/
