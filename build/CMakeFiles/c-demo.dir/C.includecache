@@ -15,4 +15,10 @@ unistd.h
 -
 string.h
 -
+sys/socket.h
+-
+netinet/in.h
+-
+netdb.h
+-
 

@@ -1,39 +1,45 @@
-#include <stdio.h>			/* printf, sprintf */
-#include <stdlib.h>			/* exit, atoi, malloc, free */
-#include <unistd.h>			/* read, write, close */
-#include <string.h>			/* memcpy, memset */
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 // application constants
-const char host[] = "goweather.herokuapp.com";
+const char HOSTNAME[] = "goweather.herokuapp.com";
+const int SERVERPORT = 80;
 
 // foreward declaration of functions
 void printUsage(char *appName);
-void get_data(char **urls, size_t num_elements);
+int socket_connect();
+char *request_data(int socketfd, char *request_uri);
 
 int main(int argc, char **argv) {
 	// check argument count, print usage info if no args are provided
    if (argc == 1) {
-       printUsage(argv[0]);
+		printUsage(argv[0]);
        return 0;
     }
 
 	system("clear");
 
-	char *urls[argc - 1];
-	
+	char *data[argc - 1];
+
 	for (int i = 1; i < argc; i++) {
-		size_t tmp_size = strlen("curl -s -X GET https://")
-			+ strlen(host)
-			+ strlen("/weather/")
-			+ strlen(argv[i]) + 1;
+		int socketfd = socket_connect();
+		char *msg = request_data(socketfd, argv[i]);
+		char *token;
 
-		char tmp_url[tmp_size];
-		urls[i] = malloc(tmp_size);
-		snprintf(tmp_url,  tmp_size, "curl -s -X GET https://%s/weather/%s", host,  argv[i]);
-		strcpy(urls[i], tmp_url);
+		while ((token = strsep(&msg, "\r\n")) != NULL) {
+			if (strncmp("{", token, strlen("{")) == 0) {
+				data[i-1] = token;
+				printf("%s\r\n\r\n", data[i-1]);
+			}
+		}
+
+		close(socketfd);
 	}
-
-	get_data(urls, argc);
 
     return 0;
 }
@@ -43,20 +49,61 @@ void printUsage(char *appName) {
 	return;
 }
 
-void get_data(char **urls, size_t num_elements) {
-	int path_max = sizeof(char) * 1024;
-	char path[path_max];
-	FILE *fp;
+int socket_connect() {
+	struct hostent *server;
+	struct sockaddr_in server_addr;
+	int socketfd;
 
-	for (int i = 1; i < num_elements; i++) {
-		fp = popen(urls[i], "r");
-		while (fgets(path, path_max, fp) != NULL) {
-			printf("%s\r\n\r\n", path);
-		}
-		
-		pclose(fp);
-		bzero(path, path_max);
+	server = gethostbyname(HOSTNAME);
+	if (server == NULL) {
+		fprintf(stderr, "Host '%s' unknown!", HOSTNAME);
+		exit(1);
 	}
 
-	return;
+	socketfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (socketfd < 3) {
+		fprintf(stderr, "Error opening socket!");
+		exit(1);
+	}
+
+	memset(&server_addr, 0, sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(SERVERPORT);
+	memcpy(&server_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+
+	if (connect(socketfd,(struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+		fprintf(stderr, "Error connecting to host!");
+		exit(1);
+	}
+
+	return socketfd;
+}
+
+char *request_data(int socketfd, char *request_uri) {
+	char request_template[] = "GET https://%s/weather/%s HTTP/1.0\r\nHost: %s\r\n\r\n";
+	int request_size = strlen(request_template)
+		+ strlen(request_uri)
+		+ strlen(HOSTNAME)*2;
+
+	char *request = (char *) malloc(request_size);
+
+	snprintf(request, request_size, request_template, HOSTNAME, request_uri, HOSTNAME);
+
+	if (write(socketfd, request, request_size) < 0) {
+		fprintf(stderr, "Error sending request!");
+		exit(1);
+	}
+
+	free(request);
+	
+	int buffer_size = sizeof(char)*256;
+	char buffer[buffer_size];
+	char *output = (char *) malloc(buffer_size*4);
+
+	while (read(socketfd, buffer, buffer_size) > 1) {
+		strcat(output, buffer);
+		bzero(buffer, buffer_size);
+	}
+
+	return output;
 }
