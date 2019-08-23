@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+/home/hdoerner/git/c-demo/src/jsmn.h
+stddef.h
+-
+
 /home/hdoerner/git/c-demo/src/main.c
 stdio.h
 -
@@ -21,4 +25,10 @@ netinet/in.h
 -
 netdb.h
 -
+main.h
+/home/hdoerner/git/c-demo/src/main.h
+jsmn.h
+/home/hdoerner/git/c-demo/src/jsmn.h
+
+/home/hdoerner/git/c-demo/src/main.h
 
