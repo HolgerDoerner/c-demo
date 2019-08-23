@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
 
 	printf("%-10s %-10s %-10s %-10s\r\n", "CITY", "COUNTRY", "SKY", "TEMP");
 	printf("%-10s %-10s %-10s %-10s\r\n", "----", "-------", "---", "----");
+	//
 	// get the desired values from the json and print them to stdout.
 	for (int i = 0; i < num_args; i++) {
 		char *name = get_value("name", tokens[i], data[i]);
@@ -116,17 +117,15 @@ int socket_connect() {
  *			name of a city to get weather data for
  * returns: the raw response
  */
-char *request_data(int socketfd, char *request_uri) {
-	// template for the http header
-	char request_template[] = "GET https://%s/data/2.5/weather?q=%s&APPID=2aa9d2b9844b929c5faca06067a9fe33&units=metric HTTP/1.0\r\nHost: %s\r\n\r\n";
-	int request_size = strlen(request_template)
-		+ strlen(request_uri)
+char *request_data(int socketfd, char *city) {
+	int request_size = strlen(HEADER_TEMPLATE)
+		+ strlen(city)
 		+ strlen(HOSTNAME)*2;
 
 	char *request = (char *) malloc(request_size);
 
 	// create final header based on parameters
-	snprintf(request, request_size, request_template, HOSTNAME, request_uri, HOSTNAME);
+	snprintf(request, request_size, HEADER_TEMPLATE, HOSTNAME, city, HOSTNAME);
 
 	// write request to socket (= send it to endpoint)
 	if (write(socketfd, request, request_size) < 0) {
@@ -157,20 +156,22 @@ char *request_data(int socketfd, char *request_uri) {
  *			the json-string
  * returns: the value stored under the given key
  */
-char *get_value(char *key, jsmntok_t *t, char *json) {
+char *get_value(char *key, jsmntok_t *token, char *json) {
+	char *value = "";
+
 	// iterate over the tokens
 	for (int i = 0; i < MAX_TOKENS; i++) {
 		// in this case only string-tokens are of interrest
-		if (t[i].type == JSMN_STRING) {
-			jsmntok_t tok = t[i];
+		if (token[i].type == JSMN_STRING) {
+			jsmntok_t tok = token[i];
 			char tmp_key[tok.end - tok.start + 1];
 			memcpy(tmp_key, &json[tok.start], tok.end-tok.start);
 			tmp_key[tok.end-tok.start] = '\0';
 
 			// check for the requested key
 			if (strcmp(tmp_key, key) == 0){
-				tok = t[i + 1];
-				char *value = (char *) malloc(tok.end - tok.start + 1);
+				tok = token[i + 1];
+				value = (char *) malloc(tok.end - tok.start + 1);
 				memcpy(value, &json[tok.start], tok.end-tok.start);
 				value[tok.end-tok.start] = '\0';
 				
@@ -179,5 +180,6 @@ char *get_value(char *key, jsmntok_t *t, char *json) {
 		}
 	}
 
-	return "";
+	// if key is not found, return an empty string
+	return value;
 }
