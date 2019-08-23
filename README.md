@@ -4,6 +4,8 @@ Simple demo application written in C
 ## About
 - OS: Linux/UNIX
 - Architecture: x86, x86_64
+- Compiler: GCC
+- Build-System: Cmake
 
 This is just a simple application written in C to bring my skills and knowledge a little bit up-to-date in this language.
 
