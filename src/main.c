@@ -17,11 +17,11 @@ int main(int argc, char **argv) {
     }
 
 	size_t num_args = argc - 1;
-	char *data[num_args];
+	char **data = (char **) malloc(sizeof(char *) * num_args);
 
 	// jsmn json-parser
 	jsmn_parser p;
-	jsmntok_t tokens[num_args][MAX_TOKENS];
+	jsmntok_t **tokens = (jsmntok_t **) malloc(sizeof(jsmntok_t *) * num_args * MAX_TOKENS);
 
 	// query the api for each argument, take the json response from the body.
 	for (int i = 0; i < num_args; i++) {
@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
 		// tokenize the json-string with jsmn and store both in arrays.
 		while ((token = strsep(&msg, "\r\n")) != NULL) {
 			if (strncmp("{", token, strlen("{")) == 0) {
+				tokens[i] = (jsmntok_t *) malloc(sizeof(jsmntok_t) * MAX_TOKENS);
 				data[i] = token;
 				jsmn_init(&p);
 				jsmn_parse(&p, data[i], strlen(data[i]), tokens[i], MAX_TOKENS);
@@ -39,7 +40,6 @@ int main(int argc, char **argv) {
 		}
 
 		free(msg);
-		free(token);
 		close(socketfd);
 	}
 
@@ -69,12 +69,14 @@ void print_usage(char *appName) {
  *			an array containing the json-strings
  * Returns: nothing (prints directly to stdout)
  */
-void print_output(jsmntok_t t[][MAX_TOKENS], char **d, size_t length) {
+void print_output(jsmntok_t **t, char **d, size_t length) {
 	printf("%-10s %-10s %-10s %-10s\r\n", "CITY", "COUNTRY", "SKY", "TEMP");
 	printf("%-10s %-10s %-10s %-10s\r\n", "----", "-------", "---", "----");
 	
 	// get the desired values from the json and print them to stdout.
 	for (int i = 0; i < length; i++) {
+		if (!strcmp(get_value("cod", t[i], d[i]), "404")) continue;
+
 		char *name = get_value("name", t[i], d[i]);
 		char *main = get_value("main", t[i], d[i]);
 		char *country = get_value("country", t[i], d[i]);
@@ -148,6 +150,7 @@ char *request_data(int socketfd, char *city) {
 	}
 
 	free(request);
+	request = NULL;
 	
 	int buffer_size = sizeof(char)*256;
 	char buffer[buffer_size];
