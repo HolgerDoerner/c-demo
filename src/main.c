@@ -43,18 +43,8 @@ int main(int argc, char **argv) {
 		close(socketfd);
 	}
 
-	printf("%-10s %-10s %-10s %-10s\r\n", "CITY", "COUNTRY", "SKY", "TEMP");
-	printf("%-10s %-10s %-10s %-10s\r\n", "----", "-------", "---", "----");
-	//
-	// get the desired values from the json and print them to stdout.
-	for (int i = 0; i < num_args; i++) {
-		char *name = get_value("name", tokens[i], data[i]);
-		char *main = get_value("main", tokens[i], data[i]);
-		char *country = get_value("country", tokens[i], data[i]);
-		char *temp = get_value("temp", tokens[i], data[i]);
-
-		printf("%-10s %-10s %-10s %-10s\r\n", name, country, main, temp);
-	}
+	// print the data to stdout.
+	print_output(tokens, data, num_args);
 
     return 0;
 }
@@ -69,6 +59,30 @@ int main(int argc, char **argv) {
  */
 void print_usage(char *appName) {
 	printf("%s <city> <citiys ...>\r\n", appName);
+	return;
+}
+
+/*
+ * Prints the final output to stdout.
+ *
+ * Args: an 2-d array containing the tokens,
+ *			an array containing the json-strings
+ * Returns: nothing (prints directly to stdout)
+ */
+void print_output(jsmntok_t t[][MAX_TOKENS], char **d, size_t length) {
+	printf("%-10s %-10s %-10s %-10s\r\n", "CITY", "COUNTRY", "SKY", "TEMP");
+	printf("%-10s %-10s %-10s %-10s\r\n", "----", "-------", "---", "----");
+	
+	// get the desired values from the json and print them to stdout.
+	for (int i = 0; i < length; i++) {
+		char *name = get_value("name", t[i], d[i]);
+		char *main = get_value("main", t[i], d[i]);
+		char *country = get_value("country", t[i], d[i]);
+		char *temp = get_value("temp", t[i], d[i]);
+
+		printf("%-10s %-10s %-10s %-10s\r\n", name, country, main, temp);
+	}
+
 	return;
 }
 
