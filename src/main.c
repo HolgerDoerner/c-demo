@@ -160,17 +160,17 @@ char *get_value(char *key, jsmntok_t *token, char *json) {
 	char *value = "";
 
 	// iterate over the tokens
-	for (int i = 0; i < MAX_TOKENS; i++) {
+	for (jsmntok_t *i = token; i < token + MAX_TOKENS; ++i) {
 		// in this case only string-tokens are of interrest
-		if (token[i].type == JSMN_STRING) {
-			jsmntok_t tok = token[i];
+		if (i->type == JSMN_STRING) {
+			jsmntok_t tok = *i;
 			char tmp_key[tok.end - tok.start + 1];
 			memcpy(tmp_key, &json[tok.start], tok.end-tok.start);
 			tmp_key[tok.end-tok.start] = '\0';
 
 			// check for the requested key
 			if (strcmp(tmp_key, key) == 0){
-				tok = token[i + 1];
+				tok = *(i + 1);
 				value = (char *) malloc(tok.end - tok.start + 1);
 				memcpy(value, &json[tok.start], tok.end-tok.start);
 				value[tok.end-tok.start] = '\0';
