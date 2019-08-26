@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 	// check argument count, print usage info if no args are provided
 	if (argc == 1) {
 		print_usage(argv[0]);
-		return 0;
+		return EXIT_SUCCESS;
     }
 
 	size_t num_args = argc - 1;
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 	// print the data to stdout.
 	print_output(tokens, data, num_args);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
@@ -102,13 +102,13 @@ int socket_connect() {
 	server = gethostbyname(HOSTNAME);
 	if (server == NULL) {
 		fprintf(stderr, "Host '%s' unknown!", HOSTNAME);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	socketfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socketfd < 3) {
 		fprintf(stderr, "Error opening socket!");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// settings for remote endpoint.
@@ -119,7 +119,7 @@ int socket_connect() {
 
 	if (connect(socketfd,(struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
 		fprintf(stderr, "Error connecting to host!");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	return socketfd;
@@ -146,7 +146,7 @@ char *request_data(int socketfd, char *city) {
 	// write request to socket (= send it to endpoint)
 	if (write(socketfd, request, request_size) < 0) {
 		fprintf(stderr, "Error sending request!");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	free(request);
