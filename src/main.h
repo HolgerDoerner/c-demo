@@ -1,3 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
+
 #include "jsmn.h"
 
 // application constants
@@ -12,3 +15,5 @@ void print_output(jsmntok_t **t, char **d, size_t length);
 int socket_connect();
 char *request_data(int socketfd, char *city);
 char *get_value(char *key, jsmntok_t *token, char *json);
+
+#endif
